@@ -1,4 +1,4 @@
-# Hong Kong Courts Analysis
+# Hong Kong Courts Analysis (work in progress)
 An empirical analysis on the success of barristers in the Hong Kong judicial system
 
 ## Sources:
