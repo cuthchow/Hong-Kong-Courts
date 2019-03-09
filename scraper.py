@@ -7,78 +7,77 @@ import seaborn as sns
 import math
 
 
-
-#Saves the unique link for each case
-case_links = []
-
-#Gets case lists for each years, scrapes links for each case
 def get_links(year_start, year_end)
+    """
+    For given start and end years, returns links to each cases judgment
+    """
+    case_links = []   
     for year in range(year_start, year_end):
         headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
         r = requests.get(f'http://www.hklii.org/eng/hk/cases/hkcfi/{year}/', headers = headers).text
         soup = BeautifulSoup(r, 'html.parser')
-
         total = len(soup.findAll('ul')[1].findAll('a'))
         for each in range(total):
             link = soup.findAll('ul')[1].findAll('a')[each]['href']
             link = link[2:]
             case_links.append(link)
-
-
             
+    return case_links    
             
-#Stores the key information from each case
-case_summaries = []
-failed_links = []
 
-#Gets HTML of each case in case_links
-#Extracts the key information, saves into dictionary for each case
 
 def get_summaries(links):
-for link in case_links: 
-    try:
-        newlink = 'http://www.hklii.org/eng/hk/cases/hkcfi' + link
-        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
-        r = requests.get(newlink, headers = headers).text
-        soup = BeautifulSoup(r, 'html.parser')
-
-        representation = soup.find_all('representation')[0].text
-        paras = len(soup.find_all(class_ = 'para'))
-        if paras > 2:
-            decision = soup.find_all(class_ = 'para')[-3].parent.text + ' ' + soup.find_all(class_ = 'para')[-2].parent.text + ' ' + soup.find_all(class_ = 'para')[-1].parent.text
-        elif paras == 2:
-            decision = soup.find_all(class_ = 'para')[-2].parent.text + ' ' + soup.find_all(class_ = 'para')[-1].parent.text
-        elif pars == 1:
-            decision = soup.find_all(class_ = 'para')[-1].parent.text
-        judge = soup.findAll('tr')[-3].text.strip() + soup.findAll('tr')[-2].text.strip()
-        judge_title = soup.findAll('tr')[-1].text.strip()
-        case = soup.find('title').text
-
-        case_dict = {'representation': representation,
-                     'decision': decision,
-                     'judge': judge,
-                     'judge_title': judge_title,
-                     'link': link,
-                     'case_name': case}
-
-        print('just did: ' + case)
-        case_summaries.append(case_dict)
-
-    except:
-        failed_links.append(link)
-        print('FAIL')
+    """
+    Gets HTML of each case in case_links
+    Extracts the key information, saves into dictionary for each case
+    Returns one list of case summaries, one list of failed attempts
+    """
+    case_summaries = []
+    failed_links = []
     
-    tot -= 1
-    print(str(tot) + ' remaining')
+    for link in case_links: 
+        try:
+            newlink = 'http://www.hklii.org/eng/hk/cases/hkcfi' + link
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+            r = requests.get(newlink, headers = headers).text
+            soup = BeautifulSoup(r, 'html.parser')
 
+            representation = soup.find_all('representation')[0].text
+            paras = len(soup.find_all(class_ = 'para'))
+            if paras > 2:
+                decision = soup.find_all(class_ = 'para')[-3].parent.text + ' ' + soup.find_all(class_ = 'para')[-2].parent.text + ' ' + soup.find_all(class_ = 'para')[-1].parent.text
+            elif paras == 2:
+                decision = soup.find_all(class_ = 'para')[-2].parent.text + ' ' + soup.find_all(class_ = 'para')[-1].parent.text
+            elif pars == 1:
+                decision = soup.find_all(class_ = 'para')[-1].parent.text
+            judge = soup.findAll('tr')[-3].text.strip() + soup.findAll('tr')[-2].text.strip()
+            judge_title = soup.findAll('tr')[-1].text.strip()
+            case = soup.find('title').text
+
+            case_dict = {'representation': representation,
+                         'decision': decision,
+                         'judge': judge,
+                         'judge_title': judge_title,
+                         'link': link,
+                         'case_name': case}
+
+            print('just did: ' + case)
+            case_summaries.append(case_dict)
+
+        except:
+            failed_links.append(link)
+            print('FAIL')
+
+        tot -= 1
+        print(str(tot) + ' remaining')
+
+    return case_summaries, failed_links
 
     
     
 #Convert to dataframe and export
 df = pd.Dataframe(case_summaries)
 df.to_csv('cases.csv', index = False)
-
-
 
 
 #Find p_rep and d_rep from Representation
